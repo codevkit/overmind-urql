@@ -1,4 +1,4 @@
-import { Client } from '@urql/core';
+import { Client, ClientOptions, createClient } from '@urql/core';
 import { TypedDocumentNode } from '@graphql-typed-document-node/core';
 import { OperationContext, OperationResult } from '@urql/core/dist/types/types';
 
@@ -53,12 +53,15 @@ const _clients: { [url: string]: Client } = {};
 export const graphql: <T extends Queries>(
   queries: T
 ) => Graphql<T> = queries => {
-  let _client: Client;
+  let _opts: ClientOptions;
 
   function getClient(): Client | null {
-    if (_client) {
-      _clients[_client.url] = _client;
-      return _client;
+    if (_opts) {
+      if (!_clients[_opts.url]) {
+        _clients[_opts.url] = createClient(_opts);
+      }
+      
+      return _clients[_opts.url];
     }
 
     return null;
@@ -124,8 +127,8 @@ export const graphql: <T extends Queries>(
   };
 
   return {
-    initialize(client: Client) {
-      _client = client;
+    initialize(opts: ClientOptions) {
+      _opts = opts;
     },
     ...evaluatedQueries,
   } as any;
