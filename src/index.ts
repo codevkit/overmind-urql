@@ -15,16 +15,32 @@ export type Graphql<T extends Queries> = {
   initialize(client: Client): void;
 } & {
   queries: {
-    [N in keyof T['queries']]: <Data = any, Variables extends object = {}>(
-      variables?: Variables,
-      context?: Partial<OperationContext>
-    ) => Promise<OperationResult<Data, Variables>>;
+    [N in keyof T['queries']]: T['queries'][N] extends TypedDocumentNode<
+      infer D,
+      infer V
+    >
+      ? <Data = D, Variables = V>(
+          variables?: Variables,
+          context?: Partial<OperationContext>
+        ) => Promise<OperationResult<Data, Variables>>
+      : <Data = any, Variables extends object = {}>(
+          variables?: Variables,
+          context?: Partial<OperationContext>
+        ) => Promise<OperationResult<Data, Variables>>;
   };
   mutations: {
-    [N in keyof T['mutations']]: <Data = any, Variables extends object = {}>(
-      variables?: Variables,
-      context?: Partial<OperationContext>
-    ) => Promise<OperationResult<Data, Variables>>;
+    [N in keyof T['mutations']]: T['mutations'][N] extends TypedDocumentNode<
+      infer D,
+      infer V
+    >
+      ? <Data = D, Variables = V>(
+          variables?: Variables,
+          context?: Partial<OperationContext>
+        ) => Promise<OperationResult<Data, Variables>>
+      : <Data = any, Variables extends object = {}>(
+          variables?: Variables,
+          context?: Partial<OperationContext>
+        ) => Promise<OperationResult<Data, Variables>>;
   };
 };
 
