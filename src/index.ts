@@ -12,7 +12,7 @@ type Queries = {
 };
 
 export type Graphql<T extends Queries> = {
-  initialize(client: Client): void;
+  initialize(opts: ClientOptions): void;
 } & {
   queries: {
     [N in keyof T['queries']]: T['queries'][N] extends TypedDocumentNode<
@@ -60,7 +60,7 @@ export const graphql: <T extends Queries>(
       if (!_clients[_opts.url]) {
         _clients[_opts.url] = createClient(_opts);
       }
-      
+
       return _clients[_opts.url];
     }
 
