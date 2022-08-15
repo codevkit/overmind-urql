@@ -4,10 +4,10 @@ import { OperationContext, OperationResult } from '@urql/core/dist/types/types';
 
 type Queries = {
   queries?: {
-    [key: string]: TypedDocumentNode<any, object> | string;
+    [key: string]: TypedDocumentNode<any, any> | string;
   };
   mutations?: {
-    [key: string]: TypedDocumentNode<any, object> | string;
+    [key: string]: TypedDocumentNode<any, any> | string;
   };
 };
 
