@@ -3,7 +3,13 @@ import { TypedDocumentNode } from '@graphql-typed-document-node/core';
 import { OperationContext, OperationResult } from '@urql/core/dist/types/types';
 
 type Queries = {
+  rawQueries?: {
+    [key: string]: TypedDocumentNode<any, any> | string;
+  };
   queries?: {
+    [key: string]: TypedDocumentNode<any, any> | string;
+  };
+  rawMutations?: {
     [key: string]: TypedDocumentNode<any, any> | string;
   };
   mutations?: {
@@ -14,8 +20,36 @@ type Queries = {
 export type Graphql<T extends Queries> = {
   initialize(opts: ClientOptions): void;
 } & {
+  rawQueries: {
+    [N in keyof T['rawQueries']]: T['rawQueries'][N] extends TypedDocumentNode<
+      infer D,
+      infer V
+    >
+      ? <Data = D, Variables = V>(
+          variables?: Variables,
+          context?: Partial<OperationContext>
+        ) => Promise<OperationResult<Data, Variables>>
+      : <Data = any, Variables extends object = {}>(
+          variables?: Variables,
+          context?: Partial<OperationContext>
+        ) => Promise<OperationResult<Data, Variables>>;
+  };
   queries: {
     [N in keyof T['queries']]: T['queries'][N] extends TypedDocumentNode<
+      infer D,
+      infer V
+    >
+      ? <Data = D, Variables = V>(
+          variables?: Variables,
+          context?: Partial<OperationContext>
+        ) => Promise<Data>
+      : <Data = any, Variables extends object = {}>(
+          variables?: Variables,
+          context?: Partial<OperationContext>
+        ) => Promise<Data>;
+  };
+  rawMutations: {
+    [N in keyof T['rawMutations']]: T['rawMutations'][N] extends TypedDocumentNode<
       infer D,
       infer V
     >
@@ -36,11 +70,11 @@ export type Graphql<T extends Queries> = {
       ? <Data = D, Variables = V>(
           variables?: Variables,
           context?: Partial<OperationContext>
-        ) => Promise<OperationResult<Data, Variables>>
+        ) => Promise<Data>
       : <Data = any, Variables extends object = {}>(
           variables?: Variables,
           context?: Partial<OperationContext>
-        ) => Promise<OperationResult<Data, Variables>>;
+        ) => Promise<Data>;
   };
 };
 
@@ -68,13 +102,13 @@ export const graphql: <T extends Queries>(
   }
 
   const evaluatedQueries = {
-    queries: Object.keys(queries.queries || {}).reduce(
+    rawQueries: Object.keys(queries.rawQueries || {}).reduce(
       (aggr, key) => {
         aggr[key] = <Data = any, Variables extends object = {}>(
           variables?: Variables,
           context?: Partial<OperationContext>
         ) => {
-          const query = queries.queries![key];
+          const query = queries.rawQueries![key];
           const client = getClient();
 
           if (client) {
@@ -96,13 +130,47 @@ export const graphql: <T extends Queries>(
         ) => Promise<OperationResult<Data, Variables>>;
       }
     ),
-    mutations: Object.keys(queries.mutations || {}).reduce(
+    queries: Object.keys(queries.queries || {}).reduce(
+      (aggr, key) => {
+        aggr[key] = async <Data = any, Variables extends object = {}>(
+          variables?: Variables,
+          context?: Partial<OperationContext>
+        ) => {
+          const query = queries.queries![key];
+          const client = getClient();
+
+          if (!client) {
+            throw createError(
+              'You are running a query, though there is no urql client configured'
+            );
+          }
+          const { data, error } = await client
+            .query<Data, Variables>(query, variables, context)
+            .toPromise();
+          if (error) {
+            throw error;
+          }
+          if (!data) {
+            throw createError('You are running a query, but there is no data');
+          }
+          return data;
+        };
+        return aggr;
+      },
+      {} as {
+        [key: string]: <Data = any, Variables extends object = {}>(
+          variables?: Variables,
+          context?: Partial<OperationContext>
+        ) => Promise<Data>;
+      }
+    ),
+    rawMutations: Object.keys(queries.rawMutations || {}).reduce(
       (aggr, key) => {
         aggr[key] = <Data = any, Variables extends object = {}>(
           variables?: Variables,
           context?: Partial<OperationContext>
         ) => {
-          const query = queries.mutations![key];
+          const query = queries.rawMutations![key];
           const client = getClient();
 
           if (client) {
@@ -122,6 +190,42 @@ export const graphql: <T extends Queries>(
           variables?: Variables,
           context?: Partial<OperationContext>
         ) => Promise<OperationResult<Data, Variables>>;
+      }
+    ),
+    mutations: Object.keys(queries.mutations || {}).reduce(
+      (aggr, key) => {
+        aggr[key] = async <Data = any, Variables extends object = {}>(
+          variables?: Variables,
+          context?: Partial<OperationContext>
+        ) => {
+          const query = queries.mutations![key];
+          const client = getClient();
+
+          if (!client) {
+            throw createError(
+              'You are running a mutation query, though there is no urql client configured'
+            );
+          }
+          const { data, error } = await client
+            .mutation<Data, Variables>(query, variables, context)
+            .toPromise();
+          if (error) {
+            throw error;
+          }
+          if (!data) {
+            throw createError(
+              'You are running a mutation query, but there is no data'
+            );
+          }
+          return data;
+        };
+        return aggr;
+      },
+      {} as {
+        [key: string]: <Data = any, Variables extends object = {}>(
+          variables?: Variables,
+          context?: Partial<OperationContext>
+        ) => Promise<Data>;
       }
     ),
   };
