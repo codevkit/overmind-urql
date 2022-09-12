@@ -55,6 +55,6 @@
     "typescript": "^4.7.4"
   },
   "dependencies": {
-    "@urql/core": "^2.6.0"
+    "@urql/core": "^3.0.3"
   }
 }
