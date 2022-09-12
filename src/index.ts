@@ -1,6 +1,10 @@
 import { Client, ClientOptions, createClient } from '@urql/core';
 import { TypedDocumentNode } from '@graphql-typed-document-node/core';
-import { OperationContext, OperationResult } from '@urql/core/dist/types/types';
+import {
+  AnyVariables,
+  OperationContext,
+  OperationResult,
+} from '@urql/core/dist/types/types';
 
 type Queries = {
   rawQueries?: {
@@ -22,59 +26,55 @@ export type Graphql<T extends Queries> = {
 } & {
   rawQueries: {
     [N in keyof T['rawQueries']]: T['rawQueries'][N] extends TypedDocumentNode<
-      infer D,
-      infer V
+      infer Data,
+      infer Variables
     >
-      ? <Data = D, Variables = V>(
-          variables?: Variables,
-          context?: Partial<OperationContext>
-        ) => Promise<OperationResult<Data, Variables>>
-      : <Data = any, Variables extends object = {}>(
-          variables?: Variables,
-          context?: Partial<OperationContext>
-        ) => Promise<OperationResult<Data, Variables>>;
+      ? Variables extends AnyVariables
+        ? (
+            variables?: Variables,
+            context?: Partial<OperationContext>
+          ) => OperationResult<Data, Variables>
+        : never
+      : never;
   };
   queries: {
     [N in keyof T['queries']]: T['queries'][N] extends TypedDocumentNode<
-      infer D,
-      infer V
+      infer Data,
+      infer Variables
     >
-      ? <Data = D, Variables = V>(
-          variables?: Variables,
-          context?: Partial<OperationContext>
-        ) => Promise<Data>
-      : <Data = any, Variables extends object = {}>(
-          variables?: Variables,
-          context?: Partial<OperationContext>
-        ) => Promise<Data>;
+      ? Variables extends AnyVariables
+        ? (
+            variables?: Variables,
+            context?: Partial<OperationContext>
+          ) => Promise<Data>
+        : never
+      : never;
   };
   rawMutations: {
     [N in keyof T['rawMutations']]: T['rawMutations'][N] extends TypedDocumentNode<
-      infer D,
-      infer V
+      infer Data,
+      infer Variables
     >
-      ? <Data = D, Variables = V>(
-          variables?: Variables,
-          context?: Partial<OperationContext>
-        ) => Promise<OperationResult<Data, Variables>>
-      : <Data = any, Variables extends object = {}>(
-          variables?: Variables,
-          context?: Partial<OperationContext>
-        ) => Promise<OperationResult<Data, Variables>>;
+      ? Variables extends AnyVariables
+        ? (
+            variables?: Variables,
+            context?: Partial<OperationContext>
+          ) => Promise<OperationResult<Data, Variables>>
+        : never
+      : never;
   };
   mutations: {
     [N in keyof T['mutations']]: T['mutations'][N] extends TypedDocumentNode<
-      infer D,
-      infer V
+      infer Data,
+      infer Variables
     >
-      ? <Data = D, Variables = V>(
-          variables?: Variables,
-          context?: Partial<OperationContext>
-        ) => Promise<Data>
-      : <Data = any, Variables extends object = {}>(
-          variables?: Variables,
-          context?: Partial<OperationContext>
-        ) => Promise<Data>;
+      ? Variables extends AnyVariables
+        ? (
+            variables?: Variables,
+            context?: Partial<OperationContext>
+          ) => Promise<Data>
+        : never
+      : never;
   };
 };
 
@@ -104,8 +104,8 @@ export const graphql: <T extends Queries>(
   const evaluatedQueries = {
     rawQueries: Object.keys(queries.rawQueries || {}).reduce(
       (aggr, key) => {
-        aggr[key] = <Data = any, Variables extends object = {}>(
-          variables?: Variables,
+        aggr[key] = <Data = any, Variables extends AnyVariables = AnyVariables>(
+          variables: Variables,
           context?: Partial<OperationContext>
         ) => {
           const query = queries.rawQueries![key];
@@ -124,16 +124,22 @@ export const graphql: <T extends Queries>(
         return aggr;
       },
       {} as {
-        [key: string]: <Data = any, Variables extends object = {}>(
-          variables?: Variables,
+        [key: string]: <
+          Data = any,
+          Variables extends AnyVariables = AnyVariables
+        >(
+          variables: Variables,
           context?: Partial<OperationContext>
         ) => Promise<OperationResult<Data, Variables>>;
       }
     ),
     queries: Object.keys(queries.queries || {}).reduce(
       (aggr, key) => {
-        aggr[key] = async <Data = any, Variables extends object = {}>(
-          variables?: Variables,
+        aggr[key] = async <
+          Data = any,
+          Variables extends AnyVariables = AnyVariables
+        >(
+          variables: Variables,
           context?: Partial<OperationContext>
         ) => {
           const query = queries.queries![key];
@@ -158,16 +164,19 @@ export const graphql: <T extends Queries>(
         return aggr;
       },
       {} as {
-        [key: string]: <Data = any, Variables extends object = {}>(
-          variables?: Variables,
+        [key: string]: <
+          Data = any,
+          Variables extends AnyVariables = AnyVariables
+        >(
+          variables: Variables,
           context?: Partial<OperationContext>
         ) => Promise<Data>;
       }
     ),
     rawMutations: Object.keys(queries.rawMutations || {}).reduce(
       (aggr, key) => {
-        aggr[key] = <Data = any, Variables extends object = {}>(
-          variables?: Variables,
+        aggr[key] = <Data = any, Variables extends AnyVariables = AnyVariables>(
+          variables: Variables,
           context?: Partial<OperationContext>
         ) => {
           const query = queries.rawMutations![key];
@@ -186,16 +195,22 @@ export const graphql: <T extends Queries>(
         return aggr;
       },
       {} as {
-        [key: string]: <Data = any, Variables extends object = {}>(
-          variables?: Variables,
+        [key: string]: <
+          Data = any,
+          Variables extends AnyVariables = AnyVariables
+        >(
+          variables: Variables,
           context?: Partial<OperationContext>
         ) => Promise<OperationResult<Data, Variables>>;
       }
     ),
     mutations: Object.keys(queries.mutations || {}).reduce(
       (aggr, key) => {
-        aggr[key] = async <Data = any, Variables extends object = {}>(
-          variables?: Variables,
+        aggr[key] = async <
+          Data = any,
+          Variables extends AnyVariables = AnyVariables
+        >(
+          variables: Variables,
           context?: Partial<OperationContext>
         ) => {
           const query = queries.mutations![key];
@@ -222,8 +237,11 @@ export const graphql: <T extends Queries>(
         return aggr;
       },
       {} as {
-        [key: string]: <Data = any, Variables extends object = {}>(
-          variables?: Variables,
+        [key: string]: <
+          Data = any,
+          Variables extends AnyVariables = AnyVariables
+        >(
+          variables: Variables,
           context?: Partial<OperationContext>
         ) => Promise<Data>;
       }
