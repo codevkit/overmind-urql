@@ -1,10 +1,10 @@
 import { Client, ClientOptions, createClient } from '@urql/core';
 import { TypedDocumentNode } from '@graphql-typed-document-node/core';
-import {
-  AnyVariables,
-  OperationContext,
-  OperationResult,
-} from '@urql/core/dist/types/types';
+import { OperationContext, OperationResult } from '@urql/core/dist/types/types';
+
+export type GqlVariables = {
+  [prop: string]: any;
+};
 
 type Queries = {
   rawQueries?: {
@@ -29,7 +29,7 @@ export type Graphql<T extends Queries> = {
       infer Data,
       infer Variables
     >
-      ? Variables extends AnyVariables
+      ? Variables extends GqlVariables
         ? (
             variables?: Variables,
             context?: Partial<OperationContext>
@@ -42,7 +42,7 @@ export type Graphql<T extends Queries> = {
       infer Data,
       infer Variables
     >
-      ? Variables extends AnyVariables
+      ? Variables extends GqlVariables
         ? (
             variables?: Variables,
             context?: Partial<OperationContext>
@@ -55,7 +55,7 @@ export type Graphql<T extends Queries> = {
       infer Data,
       infer Variables
     >
-      ? Variables extends AnyVariables
+      ? Variables extends GqlVariables
         ? (
             variables?: Variables,
             context?: Partial<OperationContext>
@@ -68,7 +68,7 @@ export type Graphql<T extends Queries> = {
       infer Data,
       infer Variables
     >
-      ? Variables extends AnyVariables
+      ? Variables extends GqlVariables
         ? (
             variables?: Variables,
             context?: Partial<OperationContext>
@@ -104,7 +104,7 @@ export const graphql: <T extends Queries>(
   const evaluatedQueries = {
     rawQueries: Object.keys(queries.rawQueries || {}).reduce(
       (aggr, key) => {
-        aggr[key] = <Data = any, Variables extends AnyVariables = AnyVariables>(
+        aggr[key] = <Data = any, Variables extends GqlVariables = GqlVariables>(
           variables: Variables,
           context?: Partial<OperationContext>
         ) => {
@@ -126,7 +126,7 @@ export const graphql: <T extends Queries>(
       {} as {
         [key: string]: <
           Data = any,
-          Variables extends AnyVariables = AnyVariables
+          Variables extends GqlVariables = GqlVariables
         >(
           variables: Variables,
           context?: Partial<OperationContext>
@@ -137,7 +137,7 @@ export const graphql: <T extends Queries>(
       (aggr, key) => {
         aggr[key] = async <
           Data = any,
-          Variables extends AnyVariables = AnyVariables
+          Variables extends GqlVariables = GqlVariables
         >(
           variables: Variables,
           context?: Partial<OperationContext>
@@ -166,7 +166,7 @@ export const graphql: <T extends Queries>(
       {} as {
         [key: string]: <
           Data = any,
-          Variables extends AnyVariables = AnyVariables
+          Variables extends GqlVariables = GqlVariables
         >(
           variables: Variables,
           context?: Partial<OperationContext>
@@ -175,7 +175,7 @@ export const graphql: <T extends Queries>(
     ),
     rawMutations: Object.keys(queries.rawMutations || {}).reduce(
       (aggr, key) => {
-        aggr[key] = <Data = any, Variables extends AnyVariables = AnyVariables>(
+        aggr[key] = <Data = any, Variables extends GqlVariables = GqlVariables>(
           variables: Variables,
           context?: Partial<OperationContext>
         ) => {
@@ -197,7 +197,7 @@ export const graphql: <T extends Queries>(
       {} as {
         [key: string]: <
           Data = any,
-          Variables extends AnyVariables = AnyVariables
+          Variables extends GqlVariables = GqlVariables
         >(
           variables: Variables,
           context?: Partial<OperationContext>
@@ -208,7 +208,7 @@ export const graphql: <T extends Queries>(
       (aggr, key) => {
         aggr[key] = async <
           Data = any,
-          Variables extends AnyVariables = AnyVariables
+          Variables extends GqlVariables = GqlVariables
         >(
           variables: Variables,
           context?: Partial<OperationContext>
@@ -239,7 +239,7 @@ export const graphql: <T extends Queries>(
       {} as {
         [key: string]: <
           Data = any,
-          Variables extends AnyVariables = AnyVariables
+          Variables extends GqlVariables = GqlVariables
         >(
           variables: Variables,
           context?: Partial<OperationContext>
