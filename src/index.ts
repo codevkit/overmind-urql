@@ -284,81 +284,83 @@ export const graphql: <T extends Queries>(queries: T) => Graphql<T> = (
         ) => Promise<Data>;
       }
     ),
-    subscriptions: Object.keys(queries.subscriptions || {}).reduce(
-      (aggr, key) => {
-        const query = queries.subscriptions![key] as any;
-        const queryString = stringifyDocument(query);
-        if (!_subscriptions[queryString]) {
-          _subscriptions[queryString] = [];
-        }
+    subscriptions: Object.keys(queries.subscriptions || {})
+      .filter((key) => key !== '__esModule')
+      .reduce(
+        (aggr, key) => {
+          const query = queries.subscriptions![key] as any;
+          const queryString = stringifyDocument(query);
+          if (!_subscriptions[queryString]) {
+            _subscriptions[queryString] = [];
+          }
 
-        function subscription<
-          Data = any,
-          Variables extends GqlVariables = GqlVariables,
-        >(variables: Variables, context?: Partial<OperationContext>) {
-          return (action: (result: Data) => void) => {
-            const client = getClient();
-            if (!client) {
-              throw createError(
-                'You are running a subscription, though there is no urql client configured'
-              );
-            }
-            const { unsubscribe } = client
-              ?.subscription(query, variables, context)
-              .subscribe((result) => action(result.data));
-            _subscriptions[queryString].push({
-              variables,
-              dispose: () => unsubscribe(),
-            });
-          };
-        }
+          function subscription<
+            Data = any,
+            Variables extends GqlVariables = GqlVariables,
+          >(variables: Variables, context?: Partial<OperationContext>) {
+            return (action: (result: Data) => void) => {
+              const client = getClient();
+              if (!client) {
+                throw createError(
+                  'You are running a subscription, though there is no urql client configured'
+                );
+              }
+              const { unsubscribe } = client
+                ?.subscription(query, variables, context)
+                .subscribe((result) => action(result.data));
+              _subscriptions[queryString].push({
+                variables,
+                dispose: () => unsubscribe(),
+              });
+            };
+          }
 
-        subscription.dispose = () => {
-          _subscriptions[queryString].forEach((sub) => {
-            try {
-              sub.dispose();
-            } catch (e) {
-              // Ignore, it probably throws an error because we weren't subscribed in the first place
-            }
-          });
-          _subscriptions[queryString].length = 0;
-        };
-
-        subscription.disposeWhere = (
-          cb: (variables: { [variables: string]: Variable }) => boolean
-        ) => {
-          _subscriptions[queryString] = _subscriptions[queryString].reduce<
-            Subscription[]
-          >((subAggr, sub) => {
-            if (cb(sub.variables)) {
+          subscription.dispose = () => {
+            _subscriptions[queryString].forEach((sub) => {
               try {
                 sub.dispose();
               } catch (e) {
                 // Ignore, it probably throws an error because we weren't subscribed in the first place
               }
-              return subAggr;
-            }
-            return subAggr.concat(sub);
-          }, []);
-        };
+            });
+            _subscriptions[queryString].length = 0;
+          };
 
-        aggr[key] = subscription;
-
-        return aggr;
-      },
-      {} as {
-        [key: string]: {
-          <Data = any, Variables extends GqlVariables = GqlVariables>(
-            variables: Variables,
-            context?: Partial<OperationContext>
-          ): (action: (result: Data) => void) => void;
-          dispose(): void;
-          disposeWhere(
+          subscription.disposeWhere = (
             cb: (variables: { [variables: string]: Variable }) => boolean
-          ): void;
-        };
-      }
-    ),
+          ) => {
+            _subscriptions[queryString] = _subscriptions[queryString].reduce<
+              Subscription[]
+            >((subAggr, sub) => {
+              if (cb(sub.variables)) {
+                try {
+                  sub.dispose();
+                } catch (e) {
+                  // Ignore, it probably throws an error because we weren't subscribed in the first place
+                }
+                return subAggr;
+              }
+              return subAggr.concat(sub);
+            }, []);
+          };
+
+          aggr[key] = subscription;
+
+          return aggr;
+        },
+        {} as {
+          [key: string]: {
+            <Data = any, Variables extends GqlVariables = GqlVariables>(
+              variables: Variables,
+              context?: Partial<OperationContext>
+            ): (action: (result: Data) => void) => void;
+            dispose(): void;
+            disposeWhere(
+              cb: (variables: { [variables: string]: Variable }) => boolean
+            ): void;
+          };
+        }
+      ),
   };
 
   return {
