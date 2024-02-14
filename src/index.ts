@@ -3,7 +3,7 @@ import type {
   OperationResult,
   TypedDocumentNode,
 } from '@urql/core';
-import { Client, ClientOptions, stringifyDocument } from '@urql/core';
+import { Client, stringifyDocument } from '@urql/core';
 
 export type GqlVariables = {
   [prop: string]: any;
@@ -35,7 +35,7 @@ type Queries = {
 };
 
 export type Graphql<T extends Queries> = {
-  initialize(opts: ClientOptions): void;
+  initialize(client: Client): void;
 } & {
   rawQueries: {
     [N in keyof T['rawQueries']]: T['rawQueries'][N] extends TypedDocumentNode<
