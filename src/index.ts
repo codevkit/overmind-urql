@@ -3,12 +3,7 @@ import type {
   OperationResult,
   TypedDocumentNode,
 } from '@urql/core';
-import {
-  Client,
-  ClientOptions,
-  createClient,
-  stringifyDocument,
-} from '@urql/core';
+import { Client, ClientOptions, stringifyDocument } from '@urql/core';
 
 export type GqlVariables = {
   [prop: string]: any;
@@ -119,7 +114,6 @@ function createError(message: string) {
   throw new Error(`OVERMIND-URQL: ${message}`);
 }
 
-const _clients: { [url: string]: Client } = {};
 const _subscriptions: {
   [query: string]: Subscription[];
 } = {};
@@ -127,18 +121,10 @@ const _subscriptions: {
 export const graphql: <T extends Queries>(queries: T) => Graphql<T> = (
   queries
 ) => {
-  let _opts: ClientOptions;
+  let _client: Client;
 
   function getClient(): Client | null {
-    if (_opts) {
-      if (!_clients[_opts.url]) {
-        _clients[_opts.url] = createClient(_opts);
-      }
-
-      return _clients[_opts.url];
-    }
-
-    return null;
+    return _client || null;
   }
 
   const evaluatedQueries = {
@@ -380,8 +366,8 @@ export const graphql: <T extends Queries>(queries: T) => Graphql<T> = (
   };
 
   return {
-    initialize(opts: ClientOptions) {
-      _opts = opts;
+    initialize(client: Client) {
+      _client = client;
     },
     ...evaluatedQueries,
   } as any;
