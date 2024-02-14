@@ -142,150 +142,166 @@ export const graphql: <T extends Queries>(queries: T) => Graphql<T> = (
   }
 
   const evaluatedQueries = {
-    rawQueries: Object.keys(queries.rawQueries || {}).reduce(
-      (aggr, key) => {
-        aggr[key] = <Data = any, Variables extends GqlVariables = GqlVariables>(
-          variables: Variables,
-          context?: Partial<OperationContext>
-        ) => {
-          const query = queries.rawQueries![key];
-          const client = getClient();
+    rawQueries: Object.keys(queries.rawQueries || {})
+      .filter((key) => key !== '__esModule') // cjs fix
+      .reduce(
+        (aggr, key) => {
+          aggr[key] = <
+            Data = any,
+            Variables extends GqlVariables = GqlVariables,
+          >(
+            variables: Variables,
+            context?: Partial<OperationContext>
+          ) => {
+            const query = queries.rawQueries![key];
+            const client = getClient();
 
-          if (!client) {
-            throw createError(
-              'You are running a query, though there is no urql client configured'
-            );
-          }
-          return client
-            .query<Data, Variables>(query, variables, context)
-            .toPromise();
-        };
-        return aggr;
-      },
-      {} as {
-        [key: string]: <
-          Data = any,
-          Variables extends GqlVariables = GqlVariables,
-        >(
-          variables: Variables,
-          context?: Partial<OperationContext>
-        ) => Promise<OperationResult<Data, Variables>>;
-      }
-    ),
-    queries: Object.keys(queries.queries || {}).reduce(
-      (aggr, key) => {
-        aggr[key] = async <
-          Data = any,
-          Variables extends GqlVariables = GqlVariables,
-        >(
-          variables: Variables,
-          context?: Partial<OperationContext>
-        ) => {
-          const query = queries.queries![key];
-          const client = getClient();
+            if (!client) {
+              throw createError(
+                'You are running a query, though there is no urql client configured'
+              );
+            }
+            return client
+              .query<Data, Variables>(query, variables, context)
+              .toPromise();
+          };
+          return aggr;
+        },
+        {} as {
+          [key: string]: <
+            Data = any,
+            Variables extends GqlVariables = GqlVariables,
+          >(
+            variables: Variables,
+            context?: Partial<OperationContext>
+          ) => Promise<OperationResult<Data, Variables>>;
+        }
+      ),
+    queries: Object.keys(queries.queries || {})
+      .filter((key) => key !== '__esModule') // cjs fix
+      .reduce(
+        (aggr, key) => {
+          aggr[key] = async <
+            Data = any,
+            Variables extends GqlVariables = GqlVariables,
+          >(
+            variables: Variables,
+            context?: Partial<OperationContext>
+          ) => {
+            const query = queries.queries![key];
+            const client = getClient();
 
-          if (!client) {
-            throw createError(
-              'You are running a query, though there is no urql client configured'
-            );
-          }
-          const { data, error } = await client
-            .query<Data, Variables>(query, variables, context)
-            .toPromise();
-          if (error) {
-            throw error;
-          }
-          if (!data) {
-            throw createError('You are running a query, but there is no data');
-          }
-          return data;
-        };
-        return aggr;
-      },
-      {} as {
-        [key: string]: <
-          Data = any,
-          Variables extends GqlVariables = GqlVariables,
-        >(
-          variables: Variables,
-          context?: Partial<OperationContext>
-        ) => Promise<Data>;
-      }
-    ),
-    rawMutations: Object.keys(queries.rawMutations || {}).reduce(
-      (aggr, key) => {
-        aggr[key] = <Data = any, Variables extends GqlVariables = GqlVariables>(
-          variables: Variables,
-          context?: Partial<OperationContext>
-        ) => {
-          const query = queries.rawMutations![key];
-          const client = getClient();
+            if (!client) {
+              throw createError(
+                'You are running a query, though there is no urql client configured'
+              );
+            }
+            const { data, error } = await client
+              .query<Data, Variables>(query, variables, context)
+              .toPromise();
+            if (error) {
+              throw error;
+            }
+            if (!data) {
+              throw createError(
+                'You are running a query, but there is no data'
+              );
+            }
+            return data;
+          };
+          return aggr;
+        },
+        {} as {
+          [key: string]: <
+            Data = any,
+            Variables extends GqlVariables = GqlVariables,
+          >(
+            variables: Variables,
+            context?: Partial<OperationContext>
+          ) => Promise<Data>;
+        }
+      ),
+    rawMutations: Object.keys(queries.rawMutations || {})
+      .filter((key) => key !== '__esModule') // cjs fix
+      .reduce(
+        (aggr, key) => {
+          aggr[key] = <
+            Data = any,
+            Variables extends GqlVariables = GqlVariables,
+          >(
+            variables: Variables,
+            context?: Partial<OperationContext>
+          ) => {
+            const query = queries.rawMutations![key];
+            const client = getClient();
 
-          if (!client) {
-            throw createError(
-              'You are running a mutation query, though there is no urql client configured'
-            );
-          }
-          return client
-            .mutation<Data, Variables>(query, variables, context)
-            .toPromise();
-        };
-        return aggr;
-      },
-      {} as {
-        [key: string]: <
-          Data = any,
-          Variables extends GqlVariables = GqlVariables,
-        >(
-          variables: Variables,
-          context?: Partial<OperationContext>
-        ) => Promise<OperationResult<Data, Variables>>;
-      }
-    ),
-    mutations: Object.keys(queries.mutations || {}).reduce(
-      (aggr, key) => {
-        aggr[key] = async <
-          Data = any,
-          Variables extends GqlVariables = GqlVariables,
-        >(
-          variables: Variables,
-          context?: Partial<OperationContext>
-        ) => {
-          const query = queries.mutations![key];
-          const client = getClient();
+            if (!client) {
+              throw createError(
+                'You are running a mutation query, though there is no urql client configured'
+              );
+            }
+            return client
+              .mutation<Data, Variables>(query, variables, context)
+              .toPromise();
+          };
+          return aggr;
+        },
+        {} as {
+          [key: string]: <
+            Data = any,
+            Variables extends GqlVariables = GqlVariables,
+          >(
+            variables: Variables,
+            context?: Partial<OperationContext>
+          ) => Promise<OperationResult<Data, Variables>>;
+        }
+      ),
+    mutations: Object.keys(queries.mutations || {})
+      .filter((key) => key !== '__esModule') // cjs fix
+      .reduce(
+        (aggr, key) => {
+          aggr[key] = async <
+            Data = any,
+            Variables extends GqlVariables = GqlVariables,
+          >(
+            variables: Variables,
+            context?: Partial<OperationContext>
+          ) => {
+            const query = queries.mutations![key];
+            const client = getClient();
 
-          if (!client) {
-            throw createError(
-              'You are running a mutation query, though there is no urql client configured'
-            );
-          }
-          const { data, error } = await client
-            .mutation<Data, Variables>(query, variables, context)
-            .toPromise();
-          if (error) {
-            throw error;
-          }
-          if (!data) {
-            throw createError(
-              'You are running a mutation query, but there is no data'
-            );
-          }
-          return data;
-        };
-        return aggr;
-      },
-      {} as {
-        [key: string]: <
-          Data = any,
-          Variables extends GqlVariables = GqlVariables,
-        >(
-          variables: Variables,
-          context?: Partial<OperationContext>
-        ) => Promise<Data>;
-      }
-    ),
+            if (!client) {
+              throw createError(
+                'You are running a mutation query, though there is no urql client configured'
+              );
+            }
+            const { data, error } = await client
+              .mutation<Data, Variables>(query, variables, context)
+              .toPromise();
+            if (error) {
+              throw error;
+            }
+            if (!data) {
+              throw createError(
+                'You are running a mutation query, but there is no data'
+              );
+            }
+            return data;
+          };
+          return aggr;
+        },
+        {} as {
+          [key: string]: <
+            Data = any,
+            Variables extends GqlVariables = GqlVariables,
+          >(
+            variables: Variables,
+            context?: Partial<OperationContext>
+          ) => Promise<Data>;
+        }
+      ),
     subscriptions: Object.keys(queries.subscriptions || {})
-      .filter((key) => key !== '__esModule')
+      .filter((key) => key !== '__esModule') // cjs fix
       .reduce(
         (aggr, key) => {
           const query = queries.subscriptions![key] as any;
