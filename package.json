@@ -33,10 +33,10 @@
     "singleQuote": true,
     "trailingComma": "es5"
   },
-  "name": "@yueliangwen/overmind-urql",
-  "author": "ylw",
+  "name": "@codevkit/overmind-urql",
+  "author": "codevkit",
   "repository": {
-    "url": "https://github.com/yueliangwen/overmind-urql.git"
+    "url": "https://github.com/codevkit/overmind-urql.git"
   },
   "module": "dist/overmind-urql.esm.js",
   "size-limit": [
