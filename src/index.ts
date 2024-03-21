@@ -1,4 +1,5 @@
 import type {
+  CombinedError,
   OperationContext,
   OperationResult,
   TypedDocumentNode,
@@ -99,7 +100,10 @@ export type Graphql<T extends Queries> = {
             (
               variables?: Variables,
               context?: Partial<OperationContext>
-            ): (action: (result: Data) => void) => void;
+            ): (
+              action: (result: Data) => void,
+              error?: (error: CombinedError) => void
+            ) => void;
             dispose(): void;
             disposeWhere(
               cb: (variables: { [variables: string]: Variable }) => boolean
@@ -300,7 +304,10 @@ export const graphql: <T extends Queries>(queries: T) => Graphql<T> = (
             Data = any,
             Variables extends GqlVariables = GqlVariables,
           >(variables: Variables, context?: Partial<OperationContext>) {
-            return (action: (result: Data) => void) => {
+            return (
+              action: (result: Data) => void,
+              error?: (error: CombinedError) => void
+            ) => {
               const client = getClient();
               if (!client) {
                 throw createError(
@@ -309,7 +316,14 @@ export const graphql: <T extends Queries>(queries: T) => Graphql<T> = (
               }
               const { unsubscribe } = client
                 ?.subscription(query, variables, context)
-                .subscribe((result) => action(result.data));
+                .subscribe((result) => {
+                  if (result.data) {
+                    action(result.data);
+                  }
+                  if (result.error && error) {
+                    error(result.error);
+                  }
+                });
               _subscriptions[queryString].push({
                 variables,
                 dispose: () => unsubscribe(),
@@ -355,7 +369,10 @@ export const graphql: <T extends Queries>(queries: T) => Graphql<T> = (
             <Data = any, Variables extends GqlVariables = GqlVariables>(
               variables: Variables,
               context?: Partial<OperationContext>
-            ): (action: (result: Data) => void) => void;
+            ): (
+              action: (result: Data) => void,
+              error?: (error: CombinedError) => void
+            ) => void;
             dispose(): void;
             disposeWhere(
               cb: (variables: { [variables: string]: Variable }) => boolean
